@@ -1,51 +1,58 @@
 # Comparative Analysis: Particle Swarm Optimization (PSO) vs Consensus-Based Optimization (CBO)
 
-This repository contains the implementation, analysis, and performance comparison of two metaheuristic optimization algorithms: **Particle Swarm Optimization (PSO)** and **Consensus-Based Optimization (CBO)**.
+This project implements and compares two stochastic metaheuristic optimizers—**Particle Swarm Optimization (PSO)** and **Consensus-Based Optimization (CBO)**—on five standard objective functions. The notebooks are intended for learning, experimentation, and visualization; results depend on the random initialization and algorithm parameters.
 
-The project focuses on optimizing non-convex objective functions in both low-dimensional (2D) and high-dimensional (10D) spaces, analyzing convergence dynamics, numerical stability, and parameter sensitivity.
+## Repository contents
 
-## Repository Structure
+- `pso.ipynb`: PSO implementation, single-run visualization, and benchmark runner.
+- `cbo.ipynb`: CBO implementation, single-run visualization, and benchmark runner.
+- `PSOvsCBO.pdf`: accompanying academic report.
 
-The codebase is organized into Jupyter Notebooks to facilitate experiment reproducibility and result visualization.
+The CSV files `pso_results.csv` and `cbo_results.csv` are **generated when the corresponding benchmark runner is executed**; they are not included in the repository by default.
 
-- **`pso.ipynb`**: Contains the full implementation of the PSO algorithm. It includes logic for velocity and position updates, boundary handling (clamping), and strategies like linear inertia decay to balance exploration and exploitation.
-- **`cbo.ipynb`**: Contains the implementation of the CBO algorithm. This notebook features advanced numerical techniques to ensure algorithmic stability (Shift Trick, weight normalization) and manages stochastic components (Drift and Diffusion).
-- **`PSOvsCBO.pdf`**: A detailed academic report documenting theoretical foundations, experimental methodology, and a critical analysis of the obtained results.
-- **`cbo_results.csv` / `pso_results.csv`**: Files containing raw data from experimental runs (success metrics, final error, execution time) for statistical analysis.
-
-## Implementation Details
+## Algorithms
 
 ### Particle Swarm Optimization (PSO)
-The implementation follows the standard "Global Best" topology. Key features include:
-- **Adaptive Inertia**: Implementation of a linear decay for the inertia weight ($w$) to favor exploration in early phases and fine-tuning in later stages.
-- **Velocity Clamping**: Limitation of the velocity vector to prevent particles from exploding out of the search space, which is critical for functions like Schwefel.
+
+The implementation uses a global-best topology, a linearly decreasing inertia weight, and velocity clamping. The global best is initialized from the evaluated starting population, and initial evaluations are included in the function-evaluation count.
 
 ### Consensus-Based Optimization (CBO)
-The CBO implementation is based on opinion dynamics and stochastic diffusion processes. To address the intrinsic numerical challenges of the algorithm, the following solutions were adopted:
-- **Shift Trick & Normalization**: To prevent arithmetic underflow when calculating exponential weights ($e^{-\alpha C(x)}$), Min-Max cost normalization and current minimum subtraction were introduced.
-- **Drift/Diffusion Balance**: Fine-tuning of $\lambda$ (Drift) and $\sigma$ (Diffusion) parameters to avoid premature swarm collapse (freezing) or divergence.
 
-## Experimental Methodology
+The implementation updates a population using a weighted consensus point and stochastic drift/diffusion. Min-max normalization of the current population's objective values is used before computing exponential weights.
 
-The algorithms were tested on a set of five standard benchmark functions:
-1.  **Sphere** (Unimodal, Convex)
-2.  **Rosenbrock** (Unimodal, narrow and curved valley)
-3.  **Ackley** (Multimodal)
-4.  **Schwefel** (Multimodal, minima at bounds)
-5.  **Rastrigin** (Highly Multimodal)
+## Benchmark functions
 
-Each experiment was conducted using a **Fixed-Cost** methodology, with a set budget of iterations and particles, measuring the success rate (tolerance $10^{-4}$) over 30 independent runs.
+Both notebooks implement these functions:
 
-## Results
+| Function | Characteristics |
+|---|---|
+| Sphere | Unimodal, convex |
+| Rosenbrock | Narrow curved valley |
+| Ackley | Multimodal |
+| Schwefel | Multimodal |
+| Rastrigin | Highly multimodal |
 
-The comparative analysis highlighted distinct behaviors:
+Search bounds vary by function. The current notebook defaults are 2 dimensions, 200 particles, 500 maximum iterations, 30 runs per function, a success tolerance of `1e-3`, and a maximum of 50,000 objective-function evaluations per run. The evaluation budget is enforced in population-sized batches. PSO counts its initial population evaluations; CBO evaluates the initial population in its first iteration, so both algorithms report evaluations using the same population-based convention.
 
-* **2D Scenario**: PSO demonstrated excellent robustness, converging in 100% of cases across all functions. CBO achieved good results on spherical and regular multimodal functions but consistently failed on the Rosenbrock function due to the consensus mechanism's difficulty in navigating flat, curved valleys.
-* **10D Scenario**: Increased dimensionality negatively impacted both algorithms. PSO maintained convergence on simple functions (Sphere, Ackley) but showed limits on complex landscapes (Rastrigin, Schwefel). CBO suffered significantly from the "curse of dimensionality," requiring extremely specific parameter tuning and showing difficulties in reaching the required tolerance despite numerical corrections.
+A run is marked successful when its best objective value is within the configured tolerance of the known optimum (zero for the implemented benchmark functions). CPU time is measured with `time.process_time()` and will vary by machine and execution environment.
 
-## Future Developments
+## Running the experiments
 
-To overcome current limitations, especially in high dimensions, future work will focus on:
+1. Install the dependencies used by the notebooks:
 
-1.  **Automatic Parameter Optimization**: Developing a meta-algorithm or hyperparameter tuning procedure (e.g., Grid Search or Bayesian Optimization) to automatically identify the optimal configuration ($\lambda, \sigma, \alpha$ for CBO; $w, c_1, c_2$ for PSO) specific to each objective function, removing the need for manual tuning to achieve convergence.
-2.  **Adaptive Variants**: Implementing adaptive mechanisms that dynamically modify noise variance ($\sigma$) in CBO in response to population diversity to prevent stagnation in local minima.
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+
+2. Open `pso.ipynb` or `cbo.ipynb` in Jupyter.
+3. Run the notebook cells in order.
+4. Uncomment `df_results = run_experiments()` in the final cell to run the benchmark suite and write the results CSV in the current working directory. This executes 30 runs for each of the five functions and can take some time.
+5. Alternatively, uncomment `run_single_execution()` for an interactive 2D run and contour visualization.
+
+The benchmark runner currently uses NumPy's global random generator without setting a seed, so repeated runs are not deterministic. Set and document a seed strategy before interpreting small differences as robust evidence.
+
+## Interpreting results and limitations
+
+The accompanying report discusses the observed behavior of the algorithms in 2D and 10D settings. The checked-in notebooks currently default to **2D only**; reproduce 10D results by setting `DIMENSIONS = 10` and rerunning the experiments. Existing report conclusions should be treated as results from the report's experiment configuration, not as results automatically reproduced by the notebooks' default settings.
+
+The benchmark suite is a small educational comparison, not a comprehensive optimizer evaluation. Performance depends on parameter choices, random seeds, search bounds, dimensionality, and the success tolerance. The notebooks do not currently provide automated statistical tests or continuous-integration checks.
