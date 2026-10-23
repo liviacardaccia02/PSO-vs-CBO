@@ -1,6 +1,6 @@
 # Comparative Analysis: Particle Swarm Optimization (PSO) vs Consensus-Based Optimization (CBO)
 
-This project implements and compares two stochastic metaheuristic optimizers—**Particle Swarm Optimization (PSO)** and **Consensus-Based Optimization (CBO)**—on five standard objective functions. The notebooks are intended for learning, experimentation, and visualization; results depend on the random initialization and algorithm parameters.
+This project implements and compares two stochastic metaheuristic optimizers, **Particle Swarm Optimization (PSO)** and **Consensus-Based Optimization (CBO)**, on five standard objective functions. The notebooks are intended for learning, experimentation, and visualization; results depend on the random initialization and algorithm parameters.
 
 ## Repository contents
 
